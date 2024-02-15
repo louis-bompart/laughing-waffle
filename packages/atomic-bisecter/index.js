@@ -1,8 +1,7 @@
-import { execSync, spawn } from "child_process";
+import { execSync, spawn } from "node:child_process";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const uiKitDirPath = process.env.UI_KIT_DIR_PATH;
 const bisecterDirPath = dirname(fileURLToPath(import.meta.url));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
@@ -18,18 +17,18 @@ const waitForTextInStream = (stream, text) => {
   });
 };
 
-execSync("npm ci --no-package-lock", { stdio: "inherit", cwd: uiKitDirPath });
+execSync("npm ci --no-package-lock", { stdio: "ignore" });
 execSync("npm run build -w=@coveo/atomic", {
   stdio: "inherit",
-  cwd: uiKitDirPath,
 });
+
 const dev = spawn(npm, ["run", "dev", "-w=@coveo/atomic"], {
   stdio: "pipe",
 });
 
 // Pipe outputs
-dev.stderr.pipe(process.stderr);
-dev.stdout.pipe(process.stdout);
+// dev.stderr.pipe(process.stderr);
+// dev.stdout.pipe(process.stdout);
 
 // Wait for the server to start
 await Promise.race([
@@ -46,6 +45,7 @@ try {
 }
 // Ensure all's clean before continuing bisecting
 execSync("git checkout -f");
+execSync('kill -9 $(lsof -t -i:3333)', {stdio: 'ignore'})
 
-// Forcefully kill everything, we got what we wanted (the test result).
+// Exit with 0 if the test passed, 1 otherwise
 process.exit(success ? 0 : 1);
