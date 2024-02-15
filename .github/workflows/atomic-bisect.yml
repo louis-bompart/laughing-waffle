@@ -1,0 +1,34 @@
+on:
+ workflow_dispatch:
+   inputs:
+    good:
+      description: 'The commit that is known to be good'
+      required: true
+    bad:
+      description: 'The commit that is known to be bad'
+      required: true
+      default: 'master'
+jobs:
+  bisect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ui-kit
+        uses: actions/checkout@v4
+        with:
+          repository: coveo/ui-kit
+          path: ui-kit
+          fetch-depth: 0
+      - name: Checkout bisecter
+        uses: actions/checkout@v4
+        with:
+          path: bisecter
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Init Bisecter
+        run: git bisect start ${{ github.event.inputs.good }} ${{ github.event.inputs.bad }}
+        working-directory: ui-kit
+      - name: Run Bisecter
+        run: git bisect run node ../bisecter/packages/atomic-bisect/index.js
+        working-directory: ui-kit
