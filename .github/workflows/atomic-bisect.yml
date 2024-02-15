@@ -33,10 +33,11 @@ jobs:
       - name: Bisect
         run: |
           git bisect start ${{ github.event.inputs.bad }} ${{ github.event.inputs.good }}
-          git bisect run node ../bisecter/packages/atomic-bisecter/index.js  ../bisect.log
+          git bisect run node ../bisecter/packages/atomic-bisecter/index.js
         working-directory: ui-kit
       - name: Summary
         run: |
           echo "Bisect complete 🐛" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat bisect.log >> $GITHUB_STEP_SUMMARY
+          git bisect view >> $GITHUB_STEP_SUMMARY
+        working-directory: ui-kit
