@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '20'
       - name: Init Bisecter
-        run: git bisect start ${{ github.event.inputs.good }} ${{ github.event.inputs.bad }}
+        run: git bisect start ${{ github.event.inputs.bad }} ${{ github.event.inputs.good }}
         working-directory: ui-kit
       - name: Run Bisecter
         run: git bisect run node ../bisecter/packages/atomic-bisect/index.js
