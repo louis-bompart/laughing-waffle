@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const bisecterDirPath = dirname(fileURLToPath(import.meta.url));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const stdio = process.env.CI ? "ignore" : "inherit";
 
 const waitForTextInStream = (stream, text) => {
   let buffer = "";
@@ -17,9 +18,9 @@ const waitForTextInStream = (stream, text) => {
   });
 };
 
-execSync("npm ci --no-package-lock", { stdio: "ignore" });
+execSync("npm ci --no-package-lock", { stdio });
 execSync("npm run build -w=@coveo/atomic", {
-  stdio: "inherit",
+  stdio,
 });
 
 const dev = spawn(npm, ["run", "dev", "-w=@coveo/atomic"], {
@@ -27,8 +28,10 @@ const dev = spawn(npm, ["run", "dev", "-w=@coveo/atomic"], {
 });
 
 // Pipe outputs
-// dev.stderr.pipe(process.stderr);
-// dev.stdout.pipe(process.stdout);
+if (stdio === "inherit") {
+  dev.stderr.pipe(process.stderr);
+  dev.stdout.pipe(process.stdout);
+}
 
 // Wait for the server to start
 await Promise.race([
@@ -39,13 +42,16 @@ await Promise.race([
 // Run the test
 let success = true;
 try {
-  execSync("npx playwright test ", { cwd: bisecterDirPath, stdio: "inherit" });
+  execSync("npx playwright test ", {
+    cwd: bisecterDirPath,
+    stdio,
+  });
 } catch (e) {
   success = false;
 }
 // Ensure all's clean before continuing bisecting
-execSync("git checkout -f");
-execSync('kill -9 $(lsof -t -i:3333)', {stdio: 'ignore'})
+execSync("git checkout -f", { stdio });
+execSync("kill -9 $(lsof -t -i:3333)", { stdio });
 
 // Exit with 0 if the test passed, 1 otherwise
 process.exit(success ? 0 : 1);
