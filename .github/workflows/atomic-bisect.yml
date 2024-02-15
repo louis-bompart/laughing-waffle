@@ -28,8 +28,10 @@ jobs:
         with:
           node-version: '20'
       - name: Init Bisecter
-        run: git bisect start ${{ github.event.inputs.bad }} ${{ github.event.inputs.good }}
-        working-directory: ui-kit
-      - name: Run Bisecter
-        run: git bisect run node ../bisecter/packages/atomic-bisecter/index.js
+        run: npm ci
+        working-directory: bisecter
+      - name: Bisect
+        run: |
+          git bisect start ${{ github.event.inputs.bad }} ${{ github.event.inputs.good }}
+          git bisect run node ../bisecter/packages/atomic-bisecter/index.js
         working-directory: ui-kit
